@@ -1,0 +1,136 @@
+<!DOCTYPE html> 
+ 
+<html> 
+ 
+<!--
+	Obtained from
+	                                                         
+	http://flowplayer.org/tools/demos/
+--> 
+ 
+<head> 
+	<title>jQuery Tools standalone demo</title> 
+ 
+	<!-- include the Tools --> 
+	<script src="http://cdn.jquerytools.org/1.2.5/full/jquery.tools.min.js"></script> 
+	 
+ 	<!-- tab styling --> 
+	<link rel="stylesheet" type="text/css" href="tabs-flowplayer-v2.css"/> 
+ 
+	<style> 
+	
+ 
+	/* override the root element to enable scrolling */
+	#flowpanes {
+		position:relative;
+		overflow:hidden;
+		clear:both;
+	}
+ 
+	/* override single pane */
+	#flowpanes div {
+		float:left;
+		display:block;
+		width:670px;
+		font-size:14px;
+	}
+ 
+	/* our additional wrapper element for the items */
+	#flowpanes .items {
+		width:20000em;
+		position:absolute;
+		clear:both;
+		margin:0;
+		padding:0;
+	}
+ 
+	#flowpanes .less, #flowpanes .less a {
+		color:#999 !important;
+		font-size:11px;
+	}
+	</style> 
+</head> 
+ 
+<body style="background-color:#26466D;"> 
+ 
+ 
+ 
+<!-- tabs work as navigator for scrollable --> 
+<ul id="flowtabs" class="navi"> 
+	<li><a id="t1" href="#story">Notifications</a></li> 
+	<li><a id="t2" href="#features">About</a></li> 
+	<li><a id="t3" href="#plugins">Beta</a></li> 
+</ul> 
+ 
+<!-- panes --> 
+<div id="flowpanes"> 
+ 
+ 
+	<!-- wrapper for scrollable items --> 
+	<div class="items"> 
+ 
+		<div> 
+ 
+			<h2>Facebook Notifications for Chrome</h2> 
+ 
+			<br clear="all" /> 
+ 
+		</div> 
+ 
+		<div> 
+ 
+			<h2>Naveen DS and Pragadeesh R</h2> 
+ 
+			<ul> 
+				<li>naveen.cse.csg@gmail.com</li> 
+				<li>rajupragadeesh@gmail.com</li> 
+				</ul> 
+ 
+			 
+ 
+		</div> 
+ 
+
+		<div> 
+ 
+				<h2>Beta Stage</h2> 
+				 This extension is still in Beta stages. Source Code will be made open as soon as the development is complete.
+ 
+			
+ 
+		</div> 
+ 
+	</div> 
+ 
+</div> 
+ 
+ 
+<!-- activate tabs with JavaScript --> 
+<script> 
+ 
+ 
+// wait until document is fully scriptable
+$(function() {
+ 
+	// select #flowplanes and make it scrollable. use circular and navigator plugins
+	$("#flowpanes").scrollable({ circular: true, mousewheel: true }).navigator({
+ 
+		// select #flowtabs to be used as navigator
+		navi: "#flowtabs",
+ 
+		// select A tags inside the navigator to work as items (not direct children)
+		naviItem: 'a',
+ 
+		// assign "current" class name for the active A tag inside navigator
+		activeClass: 'current',
+ 
+		// make browser's back button work
+		history: true
+ 
+	});
+});
+</script> 
+ 
+</body> 
+ 
+</html> 

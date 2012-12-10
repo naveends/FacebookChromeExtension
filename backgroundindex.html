@@ -1,0 +1,221 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:fb="http://www.facebook.com/2008/fbml">
+<body>
+<div id="fb-root"></div>
+<script>
+window.fbAsyncInit = function() {
+	FB.init({appId: 'Your application ID', status: true, cookie: true, xfbml: true});
+	setCookie("alert_once",0);
+	checkNotificationPermission();
+	//FBLoginCheck();
+};
+
+(function() {
+    var e = document.createElement('script');
+    e.src = 'http://connect.facebook.net/en_US/all.js';
+    document.getElementById('fb-root').appendChild(e);
+}());
+
+function setCookie(c_name,value)
+{
+	var c_value=escape(value);
+	document.cookie=c_name + "=" + c_value;
+}
+
+function RequestPermission(callback)
+{
+	console.log("RequestPermission");
+	window.webkitNotifications.requestPermission(callback);
+}
+
+function checkNotificationPermission()
+{
+	console.log("checkNotificationPermission");
+
+	if (window.webkitNotifications.checkPermission() > 0) {
+		//alert("No");
+		if(getCookie("alert_once")==0)
+		{
+			alert("Please click on the facebook icon at the end of the address bar and allow permission for notification");
+			setCookie("alert_once",1);
+		}
+                //RequestPermission(checkNotificationPermission);
+		document.getElementById('ChromeNotifications').style.visibility = 'visible';
+		FBLoginTry();
+		//RequestPermission(FBLoginCheck);
+	}
+	else
+	{
+		//alert("Yes");
+		FBLoginCheck();
+	}
+}
+
+function getCookie(c_name)
+{
+	var i,x,y,ARRcookies=document.cookie.split(";");
+	for (i=0;i<ARRcookies.length;i++)
+	{
+		x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
+		y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
+		x=x.replace(/^\s+|\s+$/g,"");
+		if (x==c_name)
+		{
+			return unescape(y);
+		}
+	}
+	return -1;
+}
+
+function removeTags(some_text)
+{
+	var retString="";
+	var flags=0;
+	someText = unescape(some_text);
+	//alert(someText);
+	for(j=0; j<someText.length; j++)
+	{
+		if(someText[j] == '<')	flags=1;
+		if(flags == 0)
+			retString = retString + someText[j];
+		if(someText[j] == '>')	flags=0;
+	}
+	return escape(retString);
+}
+
+function showNotification(theTitle, theBody, theHref)
+{
+	console.log("showNotification");
+	var title_test = removeTags(theTitle);
+	var body_test = removeTags(theBody);
+	var notification = webkitNotifications.createNotification('fb.png', unescape(title_test), unescape(body_test));
+	//var notification = webkitNotifications.createNotification('fb.png', "Hi", "Hi");
+	notification.show();
+	console.log(unescape(theHref));
+	notification.onclick = function() 
+	{
+		window.open(unescape(theHref), '_blank');
+		//alert(unescape(theHref));
+		this.cancel();
+	};
+}
+
+function FBShowLogin(show_login)
+{
+	console.log("FBShowLogin");
+	if(show_login == true)
+		document.getElementById('LoginFB').style.visibility = 'visible';
+	else
+		document.getElementById('LoginFB').style.visibility = 'hidden';
+}
+
+function FBgetUID()
+{
+	console.log("FBgetUID");
+	FB.api(
+	{
+		method: 'fql.query',
+		query: 'SELECT uid, name FROM user WHERE uid = me()'
+	},
+	function(response) {
+		document.getElementById('LoginDisplay').innerHTML = response[0].name + " succsessfully logged in!";
+		uid = response[0].uid;
+		localStorage.uid = uid;
+		setCookie("uid",uid);
+	});
+}
+
+function FBGetNotification() 
+{ 
+	console.log("FBGetNotification");
+	/*FB.api('/me', function(response) {
+    	document.getElementById('LoginDisplay').innerHTML = response.name + " succsessfully logged in!";
+	});*/
+	notification_query = 'SELECT title_html, body_html, href, updated_time FROM notification WHERE recipient_id='+ getCookie("uid") +' AND is_unread = 1 AND is_hidden = 0';
+	FB.api(
+	{
+		method: 'fql.query',
+		query: notification_query
+	},
+	function(response) {
+		//showNotification(escape("<\"esahg\">Hi<>12"),escape(new Date().getSeconds()),"");
+		if(response.length)
+		{
+			var element = document.getElementById('FBNotifications');
+			var last_updated_time = getCookie("lastnotiftime");
+			var count = 0;
+			element.innerHTML = "";
+			for(i=0; i<response.length; i++)
+			{
+				//alert(response[i].updated_time + "    "+ last_updated_time);
+				if(response[i].updated_time > last_updated_time)
+				{
+					element.innerHTML = element.innerHTML + response[i].title_html + "<br/>";
+					//showNotification(escape("<\"esahg\">Hi<>12"),escape("<123>Hi"),escape(response[i].href));
+					showNotification(escape(response[i].title_html), escape(response[i].body_html), escape(response[i].href));
+					count=1;
+				}
+			}
+			setCookie("lastnotiftime",response[0].updated_time);
+		}
+		if(!count)
+		{
+			var element = document.getElementById('FBNotifications');
+			element.innerHTML = "No new notifications!<br/>";
+		}
+	}
+	);
+	//alert(new Date().getSeconds());
+	setTimeout("FBGetNotification()",30000);
+} 
+function FBLoginTry()
+{
+	console.log("FBLoginTry");
+	if(window.webkitNotifications.checkPermission() == 0)
+	{
+		FB.login(function(response) {
+			if (response.session) {
+				if (response.perms) {
+					FBShowLogin(false);
+					FBgetUID();
+					FBGetNotification();
+				} else {
+					alert("Boo!!No Permissions");
+					setTimeout("FBLoginTry()",30000);
+				}
+			} else {
+				alert("Please Login into Facebook");
+				setTimeout("FBLoginTry()",90000);
+			}
+		}, {perms:'read_stream'});
+	}
+	else
+	{
+			setTimeout("FBLoginTry()",90000);
+	}
+	
+}
+function FBLoginCheck()
+{
+	console.log("FBLoginCheck");
+	document.getElementById('ChromeNotifications').style.visibility = 'hidden';
+	FB.getLoginStatus(function(response) {
+		if (response.session) {
+                        console.log("I have a session");
+			FBShowLogin(false);
+			FBgetUID();
+			FBGetNotification();
+		} else {
+                        FBLoginTry();
+			FBShowLogin(true);
+			
+			//setTimeout("FBLoginCheck()",30000);
+		}
+	});
+}
+</script>
+<div id="LoginFB"><a class="fb_button fb_button_medium" onclick="FBLoginTry()"><span class="fb_button_text">Login</span></a></div>
+<div id="ChromeNotifications" style="visibility:hidden"><button onClick="RequestPermission(FBLoginCheck)">Allow Notifications</button></div>
+<div id="LoginDisplay"></div>
+<div id="FBNotifications"></div>
+</body>
+</html>	
